@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, BookOpen, Crown, LayoutDashboard, Sparkles, PenTool, Gift, Settings, ChevronDown, UserCircle, Phone, Tag, Star, LogIn, UserPlus, LogOut, Sun, Moon } from 'lucide-react';
 import { ViewState } from '../types';
 
@@ -13,6 +14,8 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ currentView, setView, isAuthenticated, onLogout, isDarkMode, toggleTheme, children }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -28,26 +31,41 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setView, isAuthenticated, 
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Helper function to get path from ViewState
+  const getPath = (view: ViewState): string => {
+    switch (view) {
+      case ViewState.HOME: return '/';
+      case ViewState.LOGIN: return '/login';
+      case ViewState.SIGNUP: return '/signup';
+      case ViewState.DASHBOARD: return '/dashboard';
+      case ViewState.PRACTICE: return '/practice';
+      case ViewState.PLANNER: return '/planner';
+      case ViewState.PRICING: return '/pricing';
+      case ViewState.REFERRAL: return '/referral';
+      case ViewState.PROFILE: return '/profile';
+      case ViewState.SETTINGS: return '/settings';
+      default: return '/';
+    }
+  };
+
   // App Navigation (Sidebar/Top)
   const appNavItems = [
-    { label: 'Dashboard', view: ViewState.DASHBOARD, icon: LayoutDashboard },
-    { label: 'Practice', view: ViewState.PRACTICE, icon: PenTool },
-    { label: 'AI Planner', view: ViewState.PLANNER, icon: Sparkles },
-    { label: 'Upgrade', view: ViewState.PRICING, icon: Crown },
-    { label: 'Rewards', view: ViewState.REFERRAL, icon: Gift },
+    { label: 'Dashboard', view: ViewState.DASHBOARD, path: '/dashboard', icon: LayoutDashboard },
+    { label: 'Practice', view: ViewState.PRACTICE, path: '/practice', icon: PenTool },
+    { label: 'AI Planner', view: ViewState.PLANNER, path: '/planner', icon: Sparkles },
+    { label: 'Upgrade', view: ViewState.PRICING, path: '/pricing', icon: Crown },
+    { label: 'Rewards', view: ViewState.REFERRAL, path: '/referral', icon: Gift },
   ];
 
   // Public Navigation (Marketing)
   const publicNavItems = [
-    { label: 'Features', view: ViewState.HOME, section: 'features', icon: Star },
-    { label: 'Pricing', view: ViewState.PRICING, icon: Tag },
-    { label: 'Contact', view: ViewState.HOME, section: 'contact', icon: Phone },
+    { label: 'Features', view: ViewState.HOME, path: '/', section: 'features', icon: Star },
+    { label: 'Pricing', view: ViewState.PRICING, path: '/pricing', icon: Tag },
+    { label: 'Contact', view: ViewState.HOME, path: '/', section: 'contact', icon: Phone },
   ];
 
-  const handleNavClick = (view: ViewState, section?: string) => {
-    if (currentView !== view) {
-      setView(view);
-    }
+  const handleNavClick = (path: string, section?: string) => {
+    navigate(path);
     setIsMobileMenuOpen(false);
     setIsUserMenuOpen(false);
 
@@ -63,6 +81,15 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setView, isAuthenticated, 
     }
   };
 
+  const handleLogout = () => {
+    onLogout();
+    navigate('/');
+  };
+
+  const isActive = (path: string) => {
+    return location.pathname === path || (path === '/' && location.pathname === '/home');
+  };
+
   const isPublicPage = !isAuthenticated;
 
   return (
@@ -72,9 +99,9 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setView, isAuthenticated, 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-20 items-center">
             {/* Logo */}
-            <div 
-              className="flex items-center gap-3 cursor-pointer group select-none" 
-              onClick={() => handleNavClick(isAuthenticated ? ViewState.DASHBOARD : ViewState.HOME)}
+            <Link 
+              to={isAuthenticated ? '/dashboard' : '/'}
+              className="flex items-center gap-3 cursor-pointer group select-none"
             >
               <div className="bg-nigeria-600 p-2 rounded-xl group-hover:bg-nigeria-700 transition-all shadow-lg shadow-nigeria-100 dark:shadow-none transform group-hover:scale-105">
                 <BookOpen className="h-6 w-6 text-white" />
@@ -92,17 +119,18 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setView, isAuthenticated, 
                 <>
                   <nav className="flex space-x-1 mr-4">
                     {publicNavItems.map((item) => (
-                      <button
+                      <Link
                         key={item.label}
-                        onClick={() => handleNavClick(item.view, item.section)}
+                        to={item.path}
+                        onClick={() => handleNavClick(item.path, item.section)}
                         className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                            currentView === item.view 
+                            isActive(item.path)
                             ? 'text-nigeria-600 dark:text-nigeria-400 bg-nigeria-50 dark:bg-nigeria-900/10' 
                             : 'text-gray-600 dark:text-slate-300 hover:text-nigeria-600 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-slate-800'
                         }`}
                       >
                         {item.label}
-                      </button>
+                      </Link>
                     ))}
                   </nav>
                   
@@ -113,18 +141,18 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setView, isAuthenticated, 
                     >
                         {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
                     </button>
-                    <button 
-                      onClick={() => setView(ViewState.LOGIN)}
+                    <Link 
+                      to="/login"
                       className="px-5 py-2.5 text-sm font-semibold text-gray-700 dark:text-slate-200 hover:text-nigeria-600 dark:hover:text-white transition-colors"
                     >
                       Log in
-                    </button>
-                    <button 
-                      onClick={() => setView(ViewState.SIGNUP)}
+                    </Link>
+                    <Link 
+                      to="/signup"
                       className="bg-nigeria-600 text-white px-6 py-2.5 rounded-full text-sm font-bold hover:bg-nigeria-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                     >
                       Sign Up Free
-                    </button>
+                    </Link>
                   </div>
                 </>
               ) : (
@@ -132,18 +160,19 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setView, isAuthenticated, 
                 <>
                   <nav className="flex items-center gap-1 bg-gray-50/50 dark:bg-slate-800/50 p-1.5 rounded-full border border-gray-100 dark:border-slate-700 mr-4">
                     {appNavItems.map((item) => (
-                      <button
+                      <Link
                         key={item.label}
-                        onClick={() => handleNavClick(item.view)}
+                        to={item.path}
+                        onClick={() => handleNavClick(item.path)}
                         className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2
-                          ${currentView === item.view 
+                          ${isActive(item.path)
                             ? 'bg-white dark:bg-slate-700 text-nigeria-600 dark:text-white shadow-sm ring-1 ring-gray-100 dark:ring-slate-600' 
                             : 'text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-200 hover:bg-gray-100/50 dark:hover:bg-slate-700/50'
                           }`}
                       >
-                        <item.icon className={`h-4 w-4 ${currentView === item.view ? 'text-nigeria-600 dark:text-nigeria-400' : 'text-gray-400 dark:text-slate-500'}`} />
+                        <item.icon className={`h-4 w-4 ${isActive(item.path) ? 'text-nigeria-600 dark:text-nigeria-400' : 'text-gray-400 dark:text-slate-500'}`} />
                         {item.label}
-                      </button>
+                      </Link>
                     ))}
                   </nav>
                   
@@ -173,14 +202,14 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setView, isAuthenticated, 
                                 <p className="text-sm font-bold text-gray-900 dark:text-white">Chinedu Okafor</p>
                                 <p className="text-xs text-gray-500 dark:text-slate-400 truncate">chinedu.o@example.com</p>
                             </div>
-                            <button onClick={() => handleNavClick(ViewState.PROFILE)} className="w-full text-left px-5 py-2.5 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800 flex items-center gap-3 transition-colors">
+                            <Link to="/profile" onClick={() => setIsUserMenuOpen(false)} className="w-full text-left px-5 py-2.5 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800 flex items-center gap-3 transition-colors">
                                 <UserCircle className="h-4 w-4 text-gray-400" /> My Profile
-                            </button>
-                            <button onClick={() => handleNavClick(ViewState.SETTINGS)} className="w-full text-left px-5 py-2.5 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800 flex items-center gap-3 transition-colors">
+                            </Link>
+                            <Link to="/settings" onClick={() => setIsUserMenuOpen(false)} className="w-full text-left px-5 py-2.5 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800 flex items-center gap-3 transition-colors">
                                 <Settings className="h-4 w-4 text-gray-400" /> Settings
-                            </button>
+                            </Link>
                             <div className="border-t border-gray-100 dark:border-slate-800 mt-2 pt-1">
-                                <button onClick={onLogout} className="w-full text-left px-5 py-2.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 flex items-center gap-3 transition-colors">
+                                <button onClick={handleLogout} className="w-full text-left px-5 py-2.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 flex items-center gap-3 transition-colors">
                                     <LogOut className="h-4 w-4" /> Sign Out
                                 </button>
                             </div>
@@ -220,41 +249,44 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setView, isAuthenticated, 
           <div className="px-4 py-6 space-y-1 overflow-y-auto max-h-[80vh]">
             {/* Navigation Items */}
             {(isPublicPage ? publicNavItems : appNavItems).map((item) => (
-              <button
+              <Link
                 key={item.label}
-                onClick={() => handleNavClick(item.view, 'section' in item ? (item as any).section : undefined)}
+                to={item.path}
+                onClick={() => handleNavClick(item.path, 'section' in item ? (item as any).section : undefined)}
                 className={`w-full text-left px-4 py-3.5 rounded-2xl text-base font-semibold flex items-center gap-4 transition-all
-                  ${currentView === item.view
+                  ${isActive(item.path)
                     ? 'bg-nigeria-50 dark:bg-nigeria-900/20 text-nigeria-700 dark:text-nigeria-400'
                     : 'text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800'
                   }`}
               >
-                <div className={`p-1.5 rounded-lg ${currentView === item.view ? 'bg-white dark:bg-nigeria-900/40' : 'bg-gray-100 dark:bg-slate-800'}`}>
-                  {'icon' in item && <item.icon className={`h-5 w-5 ${currentView === item.view ? 'text-nigeria-600 dark:text-nigeria-400' : 'text-gray-500 dark:text-slate-400'}`} />}
+                <div className={`p-1.5 rounded-lg ${isActive(item.path) ? 'bg-white dark:bg-nigeria-900/40' : 'bg-gray-100 dark:bg-slate-800'}`}>
+                  {'icon' in item && <item.icon className={`h-5 w-5 ${isActive(item.path) ? 'text-nigeria-600 dark:text-nigeria-400' : 'text-gray-500 dark:text-slate-400'}`} />}
                 </div>
                 {item.label}
-              </button>
+              </Link>
             ))}
             
             {/* Public Actions */}
             {isPublicPage && (
               <div className="pt-6 mt-4 border-t border-gray-100 dark:border-slate-800 flex flex-col gap-3">
-                  <button 
-                    onClick={() => handleNavClick(ViewState.LOGIN)}
+                  <Link 
+                    to="/login"
+                    onClick={() => setIsMobileMenuOpen(false)}
                     className="w-full py-3.5 text-left px-4 rounded-2xl text-base font-semibold flex items-center gap-4 text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
                   >
                     <div className="p-1.5 rounded-lg bg-gray-100 dark:bg-slate-800">
                         <LogIn className="h-5 w-5 text-gray-500 dark:text-slate-400" />
                     </div>
                     Log in
-                  </button>
-                  <button 
-                    onClick={() => handleNavClick(ViewState.SIGNUP)}
+                  </Link>
+                  <Link 
+                    to="/signup"
+                    onClick={() => setIsMobileMenuOpen(false)}
                     className="w-full py-4 text-left px-4 rounded-2xl text-base font-bold flex items-center justify-center gap-3 bg-nigeria-600 text-white hover:bg-nigeria-700 transition-all shadow-md active:scale-95"
                   >
                     <UserPlus className="h-5 w-5" />
                     Sign Up Free
-                  </button>
+                  </Link>
               </div>
             )}
 
@@ -271,26 +303,28 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setView, isAuthenticated, 
                     </div>
                   </div>
                   
-                  <button 
-                    onClick={() => handleNavClick(ViewState.PROFILE)}
-                    className={`w-full text-left px-4 py-3.5 rounded-2xl text-base font-semibold flex items-center gap-4 transition-colors ${currentView === ViewState.PROFILE ? 'bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-white' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-800'}`}
+                  <Link 
+                    to="/profile"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`w-full text-left px-4 py-3.5 rounded-2xl text-base font-semibold flex items-center gap-4 transition-colors ${isActive('/profile') ? 'bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-white' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-800'}`}
                   >
                     <div className="p-1.5 rounded-lg bg-gray-100 dark:bg-slate-800">
                       <UserCircle className="h-5 w-5 text-gray-500 dark:text-slate-400" />
                     </div>
                     Profile
-                  </button>
-                  <button 
-                    onClick={() => handleNavClick(ViewState.SETTINGS)}
-                    className={`w-full text-left px-4 py-3.5 rounded-2xl text-base font-semibold flex items-center gap-4 transition-colors ${currentView === ViewState.SETTINGS ? 'bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-white' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-800'}`}
+                  </Link>
+                  <Link 
+                    to="/settings"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`w-full text-left px-4 py-3.5 rounded-2xl text-base font-semibold flex items-center gap-4 transition-colors ${isActive('/settings') ? 'bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-white' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-800'}`}
                   >
                     <div className="p-1.5 rounded-lg bg-gray-100 dark:bg-slate-800">
                        <Settings className="h-5 w-5 text-gray-500 dark:text-slate-400" />
                     </div>
                     Settings
-                  </button>
+                  </Link>
                   <button 
-                    onClick={onLogout}
+                    onClick={handleLogout}
                     className="w-full text-left px-4 py-3.5 rounded-2xl text-base font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 flex items-center gap-4 transition-colors"
                   >
                     <div className="p-1.5 rounded-lg bg-red-50 dark:bg-red-900/20">
@@ -326,9 +360,9 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setView, isAuthenticated, 
             <div>
               <h4 className="text-white font-semibold mb-6">Platform</h4>
               <ul className="space-y-4 text-sm">
-                <li><button onClick={() => setView(ViewState.PRACTICE)} className="hover:text-nigeria-400 transition-colors">Past Questions</button></li>
-                <li><button onClick={() => setView(ViewState.PLANNER)} className="hover:text-nigeria-400 transition-colors">Study Planner</button></li>
-                <li><button onClick={() => setView(ViewState.PRICING)} className="hover:text-nigeria-400 transition-colors">Pricing</button></li>
+                <li><Link to="/practice" className="hover:text-nigeria-400 transition-colors">Past Questions</Link></li>
+                <li><Link to="/planner" className="hover:text-nigeria-400 transition-colors">Study Planner</Link></li>
+                <li><Link to="/pricing" className="hover:text-nigeria-400 transition-colors">Pricing</Link></li>
               </ul>
             </div>
 
