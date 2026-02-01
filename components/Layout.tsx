@@ -110,7 +110,7 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setView, isAuthenticated, 
                 <span className="text-xl font-bold text-gray-900 dark:text-white leading-none tracking-tight">EduPrep</span>
                 <span className="text-[10px] font-semibold text-nigeria-600 dark:text-nigeria-400 tracking-widest uppercase mt-0.5">Nigeria</span>
               </div>
-            </div>
+            </Link>
 
             {/* Desktop Nav */}
             <div className="hidden md:flex items-center gap-1">
