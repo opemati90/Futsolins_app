@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import { HomeView, DashboardView, PracticeView, PlannerView, PricingView, ReferralView, LoginView, SignupView, ProfileView, SettingsView } from './components/Views';
+import { CookiePolicy, PrivacyPolicy, TermsOfService } from './components/PolicyPages';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ViewState } from './types';
 
@@ -126,6 +127,9 @@ function App() {
             </ProtectedRoute>
           } 
         />
+        <Route path="/privacy" element={<PrivacyPolicy isDarkMode={isDarkMode} />} />
+        <Route path="/terms" element={<TermsOfService isDarkMode={isDarkMode} />} />
+        <Route path="/cookies" element={<CookiePolicy isDarkMode={isDarkMode} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Layout>

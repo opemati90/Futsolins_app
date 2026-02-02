@@ -387,9 +387,9 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setView, isAuthenticated, 
           <div className="pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center text-sm text-slate-500">
             <p>&copy; {new Date().getFullYear()} EduPrep Nigeria. All rights reserved.</p>
             <div className="flex space-x-6 mt-4 md:mt-0">
-               <a href="#" className="hover:text-white">Privacy</a>
-               <a href="#" className="hover:text-white">Terms</a>
-               <a href="#" className="hover:text-white">Cookies</a>
+               <Link to="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+               <Link to="/terms" className="hover:text-white transition-colors">Terms</Link>
+               <Link to="/cookies" className="hover:text-white transition-colors">Cookies</Link>
             </div>
           </div>
         </div>
