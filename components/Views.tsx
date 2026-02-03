@@ -470,13 +470,11 @@ export const PracticeView: React.FC<ViewProps & { isDarkMode?: boolean }> = ({ c
 
   // Bookmarks and History
   const [bookmarks, setBookmarks] = useState<BookmarkType[]>(() => {
-    if (typeof window === 'undefined') return [];
     const stored = localStorage.getItem('eduprep_bookmarks');
     return stored ? JSON.parse(stored) : [];
   });
 
   const [answeredQuestions, setAnsweredQuestions] = useState<AnsweredQuestion[]>(() => {
-    if (typeof window === 'undefined') return [];
     const stored = localStorage.getItem('eduprep_answered_questions');
     return stored ? JSON.parse(stored) : [];
   });
@@ -597,9 +595,7 @@ export const PracticeView: React.FC<ViewProps & { isDarkMode?: boolean }> = ({ c
         
         const updated = [...answeredQuestions, ...newAnswered];
         setAnsweredQuestions(updated);
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('eduprep_answered_questions', JSON.stringify(updated));
-        }
+        localStorage.setItem('eduprep_answered_questions', JSON.stringify(updated));
       }
       
       setStep('RESULT');
@@ -610,9 +606,7 @@ export const PracticeView: React.FC<ViewProps & { isDarkMode?: boolean }> = ({ c
     if (existing) {
       const updated = bookmarks.filter(b => b.questionId !== questionId);
       setBookmarks(updated);
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('eduprep_bookmarks', JSON.stringify(updated));
-      }
+      localStorage.setItem('eduprep_bookmarks', JSON.stringify(updated));
     } else {
       const question = currentQuestions.find((q: Question) => q.id === questionId) as Question;
       if (question) {
@@ -624,9 +618,7 @@ export const PracticeView: React.FC<ViewProps & { isDarkMode?: boolean }> = ({ c
         };
         const updated = [...bookmarks, newBookmark];
         setBookmarks(updated);
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('eduprep_bookmarks', JSON.stringify(updated));
-        }
+        localStorage.setItem('eduprep_bookmarks', JSON.stringify(updated));
       }
     }
   };

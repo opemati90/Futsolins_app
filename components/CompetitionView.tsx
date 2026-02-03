@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Trophy, Calendar, Users, Award, CreditCard, CheckCircle, X, ChevronRight, Star, TrendingUp, Clock } from 'lucide-react';
 import { Competition, CompetitionEntry } from '../types';
-import { getMockCompetitions, JAMB_SUBJECTS } from '../constants';
+import { MOCK_COMPETITIONS, JAMB_SUBJECTS } from '../constants';
 
 interface CompetitionViewProps {
   isDarkMode?: boolean;
 }
 
 export const CompetitionView: React.FC<CompetitionViewProps> = ({ isDarkMode }) => {
-  const [competitions, setCompetitions] = useState<Competition[]>(() => getMockCompetitions());
+  const [competitions, setCompetitions] = useState<Competition[]>(MOCK_COMPETITIONS);
   const [selectedCompetition, setSelectedCompetition] = useState<Competition | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentStep, setPaymentStep] = useState<'details' | 'confirm' | 'success'>('details');
@@ -20,14 +20,8 @@ export const CompetitionView: React.FC<CompetitionViewProps> = ({ isDarkMode }) 
     cardName: ''
   });
   const [userEntries, setUserEntries] = useState<CompetitionEntry[]>(() => {
-    if (typeof window === 'undefined') return [];
-    try {
-      const stored = localStorage.getItem('eduprep_competition_entries');
-      return stored ? JSON.parse(stored) : [];
-    } catch (e) {
-      console.error('Error loading competition entries:', e);
-      return [];
-    }
+    const stored = localStorage.getItem('eduprep_competition_entries');
+    return stored ? JSON.parse(stored) : [];
   });
 
   const activeCompetitions = competitions.filter(c => c.status === 'active');
@@ -69,9 +63,7 @@ export const CompetitionView: React.FC<CompetitionViewProps> = ({ isDarkMode }) 
       
       const updated = [...userEntries, newEntry];
       setUserEntries(updated);
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('eduprep_competition_entries', JSON.stringify(updated));
-      }
+      localStorage.setItem('eduprep_competition_entries', JSON.stringify(updated));
       
       // Update competition participants
       setCompetitions(prev => prev.map(c => 

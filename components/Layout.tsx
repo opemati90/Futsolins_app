@@ -56,6 +56,7 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setView, isAuthenticated, 
   const appNavItems = [
     { label: 'Dashboard', view: ViewState.DASHBOARD, path: '/dashboard', icon: LayoutDashboard },
     { label: 'Practice', view: ViewState.PRACTICE, path: '/practice', icon: PenTool },
+    { label: 'AI Planner', view: ViewState.PLANNER, path: '/planner', icon: Sparkles },
     { label: 'Competition', view: ViewState.COMPETITION, path: '/competition', icon: Trophy },
     { label: 'Community', view: ViewState.COMMUNITY, path: '/community', icon: MessageSquare },
     { label: 'Admission Hub', view: ViewState.ADMISSION_HUB, path: '/admission-hub', icon: Globe },

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageCircle, Send, Users, Plus, Hash, Smile, X } from 'lucide-react';
 import { ChatRoom, ChatMessage } from '../types';
-import { getMockChatRooms } from '../constants';
+import { MOCK_CHAT_ROOMS } from '../constants';
 
 interface ChatroomViewProps {
   isDarkMode?: boolean;
@@ -9,25 +9,8 @@ interface ChatroomViewProps {
 
 export const ChatroomView: React.FC<ChatroomViewProps> = ({ isDarkMode }) => {
   const [rooms, setRooms] = useState<ChatRoom[]>(() => {
-    if (typeof window === 'undefined') return getMockChatRooms();
-    try {
-      const stored = localStorage.getItem('eduprep_chat_rooms');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        // Convert date strings back to Date objects
-        return parsed.map((room: any) => ({
-          ...room,
-          createdAt: new Date(room.createdAt),
-          messages: room.messages?.map((msg: any) => ({
-            ...msg,
-            timestamp: new Date(msg.timestamp)
-          })) || []
-        }));
-      }
-    } catch (e) {
-      console.error('Error loading chat rooms:', e);
-    }
-    return getMockChatRooms();
+    const stored = localStorage.getItem('eduprep_chat_rooms');
+    return stored ? JSON.parse(stored) : MOCK_CHAT_ROOMS;
   });
   const [selectedRoom, setSelectedRoom] = useState<ChatRoom | null>(rooms[0] || null);
   const [newMessage, setNewMessage] = useState('');
@@ -37,9 +20,7 @@ export const ChatroomView: React.FC<ChatroomViewProps> = ({ isDarkMode }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('eduprep_chat_rooms', JSON.stringify(rooms));
-    }
+    localStorage.setItem('eduprep_chat_rooms', JSON.stringify(rooms));
   }, [rooms]);
 
   useEffect(() => {
