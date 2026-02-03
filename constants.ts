@@ -128,6 +128,10 @@ export const JAMB_SUBJECTS = [
 // Mock Competitions - lazy initialization to avoid SSR issues
 let _mockCompetitions: Competition[] | null = null;
 export const getMockCompetitions = (): Competition[] => {
+  // Only create dates when in browser environment
+  if (typeof window === 'undefined') {
+    return [];
+  }
   if (!_mockCompetitions) {
     _mockCompetitions = [
       {
@@ -167,8 +171,6 @@ export const getMockCompetitions = (): Competition[] => {
   }
   return _mockCompetitions;
 };
-// Export as getter - will be called when needed
-export const MOCK_COMPETITIONS = typeof window !== 'undefined' ? getMockCompetitions() : [];
 
 // Forum Categories
 export const FORUM_CATEGORIES = [
@@ -185,6 +187,10 @@ export const FORUM_CATEGORIES = [
 // Mock Forum Posts - lazy initialization to avoid SSR issues
 let _mockPosts: Post[] | null = null;
 export const getMockPosts = (): Post[] => {
+  // Only create dates when in browser environment
+  if (typeof window === 'undefined') {
+    return [];
+  }
   if (!_mockPosts) {
     _mockPosts = [
       {
@@ -217,12 +223,14 @@ export const getMockPosts = (): Post[] => {
   }
   return _mockPosts;
 };
-// Export as getter - will be called when needed
-export const MOCK_POSTS = typeof window !== 'undefined' ? getMockPosts() : [];
 
 // Mock Chat Rooms - lazy initialization to avoid SSR issues
 let _mockChatRooms: ChatRoom[] | null = null;
 export const getMockChatRooms = (): ChatRoom[] => {
+  // Only create dates when in browser environment
+  if (typeof window === 'undefined') {
+    return [];
+  }
   if (!_mockChatRooms) {
     _mockChatRooms = [
       {
@@ -245,5 +253,3 @@ export const getMockChatRooms = (): ChatRoom[] => {
   }
   return _mockChatRooms;
 };
-// Export as getter - will be called when needed
-export const MOCK_CHAT_ROOMS = typeof window !== 'undefined' ? getMockChatRooms() : [];

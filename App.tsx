@@ -18,16 +18,23 @@ function App() {
   // Initialize dark mode from system preference or default to false
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+      try {
+        return window.matchMedia('(prefers-color-scheme: dark)').matches;
+      } catch (e) {
+        console.error('Error checking dark mode:', e);
+        return false;
+      }
     }
     return false;
   });
 
   useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
+    if (typeof window !== 'undefined' && document?.documentElement) {
+      if (isDarkMode) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
     }
   }, [isDarkMode]);
 
