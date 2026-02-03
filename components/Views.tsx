@@ -96,16 +96,43 @@ export const LoginView: React.FC<ViewProps> = ({ changeView, onLogin }) => (
   </div>
 );
 
-export const SignupView: React.FC<ViewProps> = ({ changeView, onLogin }) => (
-  <div className="min-h-[80vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-slate-950 transition-colors">
-    <div className="max-w-md w-full space-y-8 bg-white dark:bg-slate-900 p-8 md:p-10 rounded-2xl shadow-xl dark:shadow-none border border-gray-100 dark:border-slate-800">
-      <div className="text-center">
-        <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Start Your Success Story</h2>
-        <p className="mt-2 text-sm text-gray-600 dark:text-slate-400">
-          Already have an account? <button onClick={() => changeView(ViewState.LOGIN)} className="font-medium text-nigeria-600 dark:text-nigeria-400 hover:text-nigeria-500">Log in</button>
-        </p>
-      </div>
-      <form className="mt-8 space-y-6" onSubmit={(e) => { e.preventDefault(); onLogin?.(); }}>
+export const SignupView: React.FC<ViewProps> = ({ changeView, onLogin }) => {
+  const handleSignup = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Migrate guest progress to authenticated storage
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const guestQuestions = localStorage.getItem('eduprep_guest_answered_questions');
+        if (guestQuestions) {
+          const parsed = JSON.parse(guestQuestions);
+          const existing = localStorage.getItem('eduprep_answered_questions');
+          const existingParsed = existing ? JSON.parse(existing) : [];
+          const merged = [...existingParsed, ...parsed];
+          localStorage.setItem('eduprep_answered_questions', JSON.stringify(merged));
+          
+          // Clear guest data
+          localStorage.removeItem('eduprep_guest_answered_questions');
+          localStorage.removeItem('eduprep_guest_question_count');
+        }
+      }
+    } catch (error) {
+      console.error('Error migrating guest progress:', error);
+    }
+    
+    onLogin?.();
+  };
+
+  return (
+    <div className="min-h-[80vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-slate-950 transition-colors">
+      <div className="max-w-md w-full space-y-8 bg-white dark:bg-slate-900 p-8 md:p-10 rounded-2xl shadow-xl dark:shadow-none border border-gray-100 dark:border-slate-800">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Start Your Success Story</h2>
+          <p className="mt-2 text-sm text-gray-600 dark:text-slate-400">
+            Already have an account? <button onClick={() => changeView(ViewState.LOGIN)} className="font-medium text-nigeria-600 dark:text-nigeria-400 hover:text-nigeria-500">Log in</button>
+          </p>
+        </div>
+        <form className="mt-8 space-y-6" onSubmit={handleSignup}>
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-slate-300">Full Name</label>
@@ -135,11 +162,13 @@ export const SignupView: React.FC<ViewProps> = ({ changeView, onLogin }) => (
       </form>
     </div>
   </div>
-);
+  );
+};
 
 // --- HOME VIEW ---
 
 export const HomeView: React.FC<ViewProps> = ({ changeView }) => {
+  const navigate = useNavigate();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   const stats = [
@@ -190,7 +219,7 @@ export const HomeView: React.FC<ViewProps> = ({ changeView }) => {
               
               <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
                 <button 
-                  onClick={() => changeView(ViewState.SIGNUP)}
+                  onClick={() => navigate('/practice')}
                   className="px-10 py-5 bg-nigeria-600 text-white font-extrabold rounded-2xl shadow-xl hover:bg-nigeria-700 hover:shadow-2xl transition-all text-xl flex items-center justify-center gap-3 transform hover:-translate-y-1 w-full sm:w-auto"
                 >
                   Start Practicing Free <ArrowRight className="h-6 w-6" />
@@ -435,7 +464,7 @@ export const HomeView: React.FC<ViewProps> = ({ changeView }) => {
           <h2 className="text-2xl md:text-3xl font-bold mb-4">Ready to smash your exams?</h2>
           <p className="text-nigeria-200 mb-8">Join the platform that is changing how Nigerian students learn.</p>
           <button 
-             onClick={() => changeView(ViewState.SIGNUP)}
+             onClick={() => navigate('/signup')}
              className="w-full md:w-auto px-10 py-4 bg-white text-nigeria-900 font-bold rounded-full shadow-lg hover:bg-gray-100 transition-all text-lg"
           >
              Create Free Account
@@ -447,7 +476,23 @@ export const HomeView: React.FC<ViewProps> = ({ changeView }) => {
 };
 
 // --- PRACTICE VIEW ---
-export const PracticeView: React.FC<ViewProps & { isDarkMode?: boolean }> = ({ changeView, isDarkMode }) => {
+export const PracticeView: React.FC<ViewProps & { isDarkMode?: boolean; isAuthenticated?: boolean; onLogin?: () => void }> = ({ changeView, isDarkMode, isAuthenticated = false, onLogin }) => {
+  const navigate = useNavigate();
+  const [showSignupModal, setShowSignupModal] = useState(false);
+  const [guestQuestionCount, setGuestQuestionCount] = useState(() => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const stored = localStorage.getItem('eduprep_guest_question_count');
+        return stored ? parseInt(stored, 10) : 0;
+      }
+    } catch (error) {
+      console.error('Error loading guest question count:', error);
+    }
+    return 0;
+  });
+
+  const FREE_QUESTION_LIMIT = 5;
+
   // Flattened State: 'SETUP' combines selection and config
   type Step = 'SETUP' | 'QUIZ' | 'RESULT' | 'BOOKMARKS' | 'HISTORY';
   
@@ -492,6 +537,30 @@ export const PracticeView: React.FC<ViewProps & { isDarkMode?: boolean }> = ({ c
     }
     return [];
   });
+
+  // Guest progress tracking
+  const [guestAnsweredQuestions, setGuestAnsweredQuestions] = useState<AnsweredQuestion[]>(() => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const stored = localStorage.getItem('eduprep_guest_answered_questions');
+        return stored ? JSON.parse(stored) : [];
+      }
+    } catch (error) {
+      console.error('Error loading guest answered questions:', error);
+    }
+    return [];
+  });
+
+  useEffect(() => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.setItem('eduprep_guest_question_count', guestQuestionCount.toString());
+        localStorage.setItem('eduprep_guest_answered_questions', JSON.stringify(guestAnsweredQuestions));
+      }
+    } catch (error) {
+      console.error('Error saving guest progress:', error);
+    }
+  }, [guestQuestionCount, guestAnsweredQuestions]);
 
   const [bookmarkFilter, setBookmarkFilter] = useState<string>('all');
   const [historyFilter, setHistoryFilter] = useState<string>('all');
@@ -542,6 +611,13 @@ export const PracticeView: React.FC<ViewProps & { isDarkMode?: boolean }> = ({ c
 
   const startSession = () => {
     if (!selectedSubject) return;
+    
+    // Check if unauthenticated user has reached limit
+    if (!isAuthenticated && guestQuestionCount >= FREE_QUESTION_LIMIT) {
+      setShowSignupModal(true);
+      return;
+    }
+    
     setStep('QUIZ');
     setCurrentQIndex(0);
     setUserAnswers({});
@@ -556,7 +632,17 @@ export const PracticeView: React.FC<ViewProps & { isDarkMode?: boolean }> = ({ c
         if(window.confirm("Are you sure you want to end this session? Progress will be lost.")) setStep('SETUP');
     }
     else if (step === 'RESULT') setStep('SETUP');
-    else if (step === 'SETUP') changeView(ViewState.DASHBOARD);
+    else if (step === 'SETUP') {
+      if (isAuthenticated) {
+        changeView(ViewState.DASHBOARD);
+      } else {
+        navigate('/');
+      }
+    }
+    // Prevent access to bookmarks/history for unauthenticated users
+    if ((step === 'BOOKMARKS' || step === 'HISTORY') && !isAuthenticated) {
+      setStep('SETUP');
+    }
   };
 
   const formatTime = (seconds: number) => {
@@ -607,20 +693,48 @@ export const PracticeView: React.FC<ViewProps & { isDarkMode?: boolean }> = ({ c
           answeredAt: new Date()
         }));
         
-        const updated = [...answeredQuestions, ...newAnswered];
-        setAnsweredQuestions(updated);
-        localStorage.setItem('eduprep_answered_questions', JSON.stringify(updated));
+        if (isAuthenticated) {
+          // Save to authenticated storage
+          const updated = [...answeredQuestions, ...newAnswered];
+          setAnsweredQuestions(updated);
+          try {
+            localStorage.setItem('eduprep_answered_questions', JSON.stringify(updated));
+          } catch (error) {
+            console.error('Error saving answered questions:', error);
+          }
+        } else {
+          // Save to guest storage and track count
+          const updated = [...guestAnsweredQuestions, ...newAnswered];
+          setGuestAnsweredQuestions(updated);
+          const newCount = guestQuestionCount + newAnswered.length;
+          setGuestQuestionCount(newCount);
+          
+          // Check if limit reached
+          if (newCount >= FREE_QUESTION_LIMIT) {
+            setShowSignupModal(true);
+          }
+        }
       }
       
       setStep('RESULT');
   };
 
   const toggleBookmark = (questionId: number) => {
+    if (!isAuthenticated) {
+      // Show signup prompt if trying to bookmark while unauthenticated
+      setShowSignupModal(true);
+      return;
+    }
+    
     const existing = bookmarks.find(b => b.questionId === questionId);
     if (existing) {
       const updated = bookmarks.filter(b => b.questionId !== questionId);
       setBookmarks(updated);
-      localStorage.setItem('eduprep_bookmarks', JSON.stringify(updated));
+      try {
+        localStorage.setItem('eduprep_bookmarks', JSON.stringify(updated));
+      } catch (error) {
+        console.error('Error saving bookmarks:', error);
+      }
     } else {
       const question = currentQuestions.find((q: Question) => q.id === questionId) as Question;
       if (question) {
@@ -632,7 +746,11 @@ export const PracticeView: React.FC<ViewProps & { isDarkMode?: boolean }> = ({ c
         };
         const updated = [...bookmarks, newBookmark];
         setBookmarks(updated);
-        localStorage.setItem('eduprep_bookmarks', JSON.stringify(updated));
+        try {
+          localStorage.setItem('eduprep_bookmarks', JSON.stringify(updated));
+        } catch (error) {
+          console.error('Error saving bookmarks:', error);
+        }
       }
     }
   };
@@ -710,6 +828,68 @@ export const PracticeView: React.FC<ViewProps & { isDarkMode?: boolean }> = ({ c
         </div>
       )}
 
+      {/* Signup Prompt Modal */}
+      {showSignupModal && !isAuthenticated && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-8 max-w-md w-full shadow-2xl border border-gray-100 dark:border-slate-800 relative overflow-hidden">
+            {/* Decorative Background Element */}
+            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-nigeria-600 to-nigeria-400"></div>
+            
+            <div className="flex flex-col items-center text-center">
+              <div className="w-20 h-20 bg-nigeria-50 dark:bg-nigeria-900/20 rounded-full flex items-center justify-center mb-6 ring-8 ring-nigeria-50/50 dark:ring-nigeria-900/10">
+                <Trophy className="h-10 w-10 text-nigeria-600 dark:text-nigeria-400" />
+              </div>
+              
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                You've Answered {FREE_QUESTION_LIMIT} Questions!
+              </h3>
+              
+              <p className="text-gray-600 dark:text-slate-400 text-sm mb-6 leading-relaxed">
+                Create a free account to continue practicing and unlock all features including bookmarks, history, and unlimited questions.
+              </p>
+
+              <div className="bg-nigeria-50 dark:bg-nigeria-900/20 rounded-xl p-4 w-full mb-6 border border-nigeria-200 dark:border-nigeria-800">
+                <p className="text-xs text-nigeria-700 dark:text-nigeria-300 uppercase font-bold tracking-wider mb-2">What You'll Get:</p>
+                <ul className="text-left space-y-2 text-sm text-nigeria-600 dark:text-nigeria-400">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 shrink-0" />
+                    <span>Unlimited practice questions</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 shrink-0" />
+                    <span>Save bookmarks and track history</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 shrink-0" />
+                    <span>Your progress will be saved</span>
+                  </li>
+                </ul>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row gap-3 w-full">
+                <button 
+                  onClick={() => {
+                    setShowSignupModal(false);
+                  }}
+                  className="flex-1 py-3.5 bg-white dark:bg-slate-800 text-gray-700 dark:text-slate-300 font-bold rounded-xl border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
+                >
+                  Maybe Later
+                </button>
+                <button 
+                  onClick={() => {
+                    setShowSignupModal(false);
+                    navigate('/signup');
+                  }}
+                  className="flex-1 py-3.5 bg-gradient-to-r from-nigeria-600 to-nigeria-700 text-white font-bold rounded-xl hover:shadow-lg hover:scale-[1.02] transition-all"
+                >
+                  Sign Up Free
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header Area */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
         <div>
@@ -730,7 +910,7 @@ export const PracticeView: React.FC<ViewProps & { isDarkMode?: boolean }> = ({ c
         </div>
         
         <div className="flex items-center gap-3">
-          {step === 'SETUP' && (
+          {step === 'SETUP' && isAuthenticated && (
             <>
               <button
                 onClick={() => setStep('BOOKMARKS')}
@@ -748,6 +928,11 @@ export const PracticeView: React.FC<ViewProps & { isDarkMode?: boolean }> = ({ c
               </button>
             </>
           )}
+          {step === 'SETUP' && !isAuthenticated && (
+            <div className="px-4 py-2 rounded-xl bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-300 text-sm font-medium">
+              {FREE_QUESTION_LIMIT - guestQuestionCount} free questions remaining
+            </div>
+          )}
           {step !== 'SETUP' && step !== 'BOOKMARKS' && step !== 'HISTORY' && (
             <button 
             onClick={handleBack}
@@ -756,7 +941,7 @@ export const PracticeView: React.FC<ViewProps & { isDarkMode?: boolean }> = ({ c
             <ChevronDown className="h-4 w-4 rotate-90" /> Back
             </button>
           )}
-          {(step === 'BOOKMARKS' || step === 'HISTORY') && (
+          {(step === 'BOOKMARKS' || step === 'HISTORY') && isAuthenticated && (
             <button 
             onClick={() => setStep('SETUP')}
             className="text-sm font-medium text-gray-500 hover:text-gray-900 dark:text-slate-400 dark:hover:text-white transition-colors flex items-center gap-1"
@@ -1117,7 +1302,7 @@ export const PracticeView: React.FC<ViewProps & { isDarkMode?: boolean }> = ({ c
       )}
 
       {/* BOOKMARKS VIEW */}
-      {step === 'BOOKMARKS' && (
+      {step === 'BOOKMARKS' && isAuthenticated && (
         <div className="animate-in fade-in">
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
@@ -1192,7 +1377,7 @@ export const PracticeView: React.FC<ViewProps & { isDarkMode?: boolean }> = ({ c
       )}
 
       {/* HISTORY VIEW */}
-      {step === 'HISTORY' && (
+      {step === 'HISTORY' && isAuthenticated && (
         <div className="animate-in fade-in">
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 p-6 mb-6">
             <div className="flex items-center justify-between mb-4">

@@ -192,9 +192,7 @@ function App() {
         <Route 
           path="/practice" 
           element={
-            <ProtectedRoute isAuthenticated={isAuthenticated} isDarkMode={isDarkMode} onLogin={handleLogin}>
-              <PracticeView {...commonProps} />
-            </ProtectedRoute>
+            <PracticeView {...commonProps} isAuthenticated={isAuthenticated} onLogin={handleLogin} />
           } 
         />
         <Route 
