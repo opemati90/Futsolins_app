@@ -23,10 +23,12 @@ const UNIVERSITIES = {
 export const AdmissionHubView: React.FC<AdmissionHubViewProps> = ({ isDarkMode }) => {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [admissionApplications, setAdmissionApplications] = useState<AdmissionApplication[]>(() => {
+    if (typeof window === 'undefined') return [];
     const stored = localStorage.getItem('eduprep_admission_applications');
     return stored ? JSON.parse(stored) : [];
   });
   const [visaApplications, setVisaApplications] = useState<VisaApplication[]>(() => {
+    if (typeof window === 'undefined') return [];
     const stored = localStorage.getItem('eduprep_visa_applications');
     return stored ? JSON.parse(stored) : [];
   });
@@ -63,7 +65,9 @@ export const AdmissionHubView: React.FC<AdmissionHubViewProps> = ({ isDarkMode }
     
     const updated = [...admissionApplications, newApplication];
     setAdmissionApplications(updated);
-    localStorage.setItem('eduprep_admission_applications', JSON.stringify(updated));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('eduprep_admission_applications', JSON.stringify(updated));
+    }
     setShowAdmissionForm(false);
     setAdmissionForm({ targetCountry: '', targetUniversity: '', program: '', documents: [] });
   };
@@ -82,7 +86,9 @@ export const AdmissionHubView: React.FC<AdmissionHubViewProps> = ({ isDarkMode }
     
     const updated = [...visaApplications, newApplication];
     setVisaApplications(updated);
-    localStorage.setItem('eduprep_visa_applications', JSON.stringify(updated));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('eduprep_visa_applications', JSON.stringify(updated));
+    }
     setShowVisaForm(false);
     setVisaForm({ country: '', visaType: '', documents: [] });
   };

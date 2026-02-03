@@ -11,6 +11,7 @@ type SortOption = 'hot' | 'new' | 'top';
 
 export const ForumView: React.FC<ForumViewProps> = ({ isDarkMode }) => {
   const [posts, setPosts] = useState<Post[]>(() => {
+    if (typeof window === 'undefined') return MOCK_POSTS;
     const stored = localStorage.getItem('eduprep_forum_posts');
     return stored ? JSON.parse(stored) : MOCK_POSTS;
   });
@@ -23,7 +24,9 @@ export const ForumView: React.FC<ForumViewProps> = ({ isDarkMode }) => {
   const [newComment, setNewComment] = useState('');
 
   useEffect(() => {
-    localStorage.setItem('eduprep_forum_posts', JSON.stringify(posts));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('eduprep_forum_posts', JSON.stringify(posts));
+    }
   }, [posts]);
 
   const handleUpvote = (postId: string) => {

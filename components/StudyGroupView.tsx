@@ -12,6 +12,7 @@ type Step = 'overview' | 'create' | 'invite' | 'payment' | 'success' | 'manage';
 export const StudyGroupView: React.FC<StudyGroupViewProps> = ({ isDarkMode }) => {
   const [step, setStep] = useState<Step>('overview');
   const [userGroups, setUserGroups] = useState<StudyGroup[]>(() => {
+    if (typeof window === 'undefined') return [];
     const stored = localStorage.getItem('eduprep_study_groups');
     return stored ? JSON.parse(stored) : [];
   });
@@ -78,14 +79,18 @@ export const StudyGroupView: React.FC<StudyGroupViewProps> = ({ isDarkMode }) =>
       );
       
       setUserGroups(updated);
-      localStorage.setItem('eduprep_study_groups', JSON.stringify(updated));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('eduprep_study_groups', JSON.stringify(updated));
+      }
       
       if (updated.find(g => g.id === group.id)?.members.length === 3) {
         const activated = updated.map(g => 
           g.id === group.id ? { ...g, status: 'active' as const } : g
         );
         setUserGroups(activated);
-        localStorage.setItem('eduprep_study_groups', JSON.stringify(activated));
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('eduprep_study_groups', JSON.stringify(activated));
+        }
       }
       
       setStep('overview');
@@ -102,7 +107,9 @@ export const StudyGroupView: React.FC<StudyGroupViewProps> = ({ isDarkMode }) =>
           : g
       );
       setUserGroups(updated);
-      localStorage.setItem('eduprep_study_groups', JSON.stringify(updated));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('eduprep_study_groups', JSON.stringify(updated));
+      }
       setStep('success');
     }, 2000);
   };
@@ -438,7 +445,9 @@ export const StudyGroupView: React.FC<StudyGroupViewProps> = ({ isDarkMode }) =>
                 if (currentGroup) {
                   const updated = [...userGroups, currentGroup];
                   setUserGroups(updated);
-                  localStorage.setItem('eduprep_study_groups', JSON.stringify(updated));
+                  if (typeof window !== 'undefined') {
+                    localStorage.setItem('eduprep_study_groups', JSON.stringify(updated));
+                  }
                 }
               }}
               className="w-full py-3 bg-nigeria-600 text-white font-bold rounded-xl hover:bg-nigeria-700 transition-all"

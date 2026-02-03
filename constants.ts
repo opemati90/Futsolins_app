@@ -74,6 +74,9 @@ export const PRICING_PLANS: PricingPlan[] = [
   }
 ];
 
+// Study Group Pricing (defined before PRICING_PLANS to avoid reference error)
+export const STUDY_GROUP_PRICE = 15000; // ₦15,000 for 3 users
+
 export const SAMPLE_QUESTIONS: Question[] = [
   {
     id: 1,
@@ -220,6 +223,3 @@ export const MOCK_CHAT_ROOMS: ChatRoom[] = [
     createdAt: new Date('2024-01-12')
   }
 ];
-
-// Study Group Pricing
-export const STUDY_GROUP_PRICE = 15000; // ₦15,000 for 3 users

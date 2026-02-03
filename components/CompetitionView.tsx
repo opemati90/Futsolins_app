@@ -20,6 +20,7 @@ export const CompetitionView: React.FC<CompetitionViewProps> = ({ isDarkMode }) 
     cardName: ''
   });
   const [userEntries, setUserEntries] = useState<CompetitionEntry[]>(() => {
+    if (typeof window === 'undefined') return [];
     const stored = localStorage.getItem('eduprep_competition_entries');
     return stored ? JSON.parse(stored) : [];
   });
@@ -63,7 +64,9 @@ export const CompetitionView: React.FC<CompetitionViewProps> = ({ isDarkMode }) 
       
       const updated = [...userEntries, newEntry];
       setUserEntries(updated);
-      localStorage.setItem('eduprep_competition_entries', JSON.stringify(updated));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('eduprep_competition_entries', JSON.stringify(updated));
+      }
       
       // Update competition participants
       setCompetitions(prev => prev.map(c => 
