@@ -125,42 +125,50 @@ export const JAMB_SUBJECTS = [
   "Islamic Religious Studies"
 ];
 
-// Mock Competitions
-export const MOCK_COMPETITIONS: Competition[] = [
-  {
-    id: 'comp-1',
-    title: 'JAMB Excellence Challenge 2024',
-    startDate: new Date('2024-02-01'),
-    endDate: new Date('2024-02-29'),
-    prizePool: 500000,
-    entryFee: 10000,
-    subjects: ['English Language', 'Mathematics', 'Physics', 'Chemistry'],
-    participants: 1247,
-    status: 'active'
-  },
-  {
-    id: 'comp-2',
-    title: 'Science & Tech Competition',
-    startDate: new Date('2024-03-01'),
-    endDate: new Date('2024-03-31'),
-    prizePool: 750000,
-    entryFee: 10000,
-    subjects: ['English Language', 'Mathematics', 'Physics', 'Computer Studies'],
-    participants: 0,
-    status: 'upcoming'
-  },
-  {
-    id: 'comp-3',
-    title: 'Arts & Humanities Challenge',
-    startDate: new Date('2024-01-01'),
-    endDate: new Date('2024-01-31'),
-    prizePool: 300000,
-    entryFee: 10000,
-    subjects: ['English Language', 'Literature', 'Government', 'History'],
-    participants: 856,
-    status: 'ended'
+// Mock Competitions - lazy initialization to avoid SSR issues
+let _mockCompetitions: Competition[] | null = null;
+export const getMockCompetitions = (): Competition[] => {
+  if (!_mockCompetitions) {
+    _mockCompetitions = [
+      {
+        id: 'comp-1',
+        title: 'JAMB Excellence Challenge 2024',
+        startDate: new Date('2024-02-01'),
+        endDate: new Date('2024-02-29'),
+        prizePool: 500000,
+        entryFee: 10000,
+        subjects: ['English Language', 'Mathematics', 'Physics', 'Chemistry'],
+        participants: 1247,
+        status: 'active'
+      },
+      {
+        id: 'comp-2',
+        title: 'Science & Tech Competition',
+        startDate: new Date('2024-03-01'),
+        endDate: new Date('2024-03-31'),
+        prizePool: 750000,
+        entryFee: 10000,
+        subjects: ['English Language', 'Mathematics', 'Physics', 'Computer Studies'],
+        participants: 0,
+        status: 'upcoming'
+      },
+      {
+        id: 'comp-3',
+        title: 'Arts & Humanities Challenge',
+        startDate: new Date('2024-01-01'),
+        endDate: new Date('2024-01-31'),
+        prizePool: 300000,
+        entryFee: 10000,
+        subjects: ['English Language', 'Literature', 'Government', 'History'],
+        participants: 856,
+        status: 'ended'
+      }
+    ];
   }
-];
+  return _mockCompetitions;
+};
+// Export as getter - will be called when needed
+export const MOCK_COMPETITIONS = typeof window !== 'undefined' ? getMockCompetitions() : [];
 
 // Forum Categories
 export const FORUM_CATEGORIES = [
@@ -174,52 +182,68 @@ export const FORUM_CATEGORIES = [
   'Success Stories'
 ];
 
-// Mock Forum Posts
-export const MOCK_POSTS: Post[] = [
-  {
-    id: 'post-1',
-    authorId: 'user-1',
-    authorName: 'Chioma Okeke',
-    title: 'How I scored 320 in JAMB - My Study Strategy',
-    content: 'I want to share my study strategy that helped me score 320 in JAMB. The key was consistency and using past questions effectively...',
-    category: 'Success Stories',
-    upvotes: 45,
-    downvotes: 2,
-    commentCount: 12,
-    createdAt: new Date('2024-01-15'),
-    comments: []
-  },
-  {
-    id: 'post-2',
-    authorId: 'user-2',
-    authorName: 'Ibrahim Musa',
-    title: 'Best Physics Topics to Focus On',
-    content: 'For those preparing for JAMB Physics, here are the most frequently tested topics based on my analysis of past questions...',
-    category: 'Subject Help',
-    upvotes: 32,
-    downvotes: 1,
-    commentCount: 8,
-    createdAt: new Date('2024-01-20'),
-    comments: []
+// Mock Forum Posts - lazy initialization to avoid SSR issues
+let _mockPosts: Post[] | null = null;
+export const getMockPosts = (): Post[] => {
+  if (!_mockPosts) {
+    _mockPosts = [
+      {
+        id: 'post-1',
+        authorId: 'user-1',
+        authorName: 'Chioma Okeke',
+        title: 'How I scored 320 in JAMB - My Study Strategy',
+        content: 'I want to share my study strategy that helped me score 320 in JAMB. The key was consistency and using past questions effectively...',
+        category: 'Success Stories',
+        upvotes: 45,
+        downvotes: 2,
+        commentCount: 12,
+        createdAt: new Date('2024-01-15'),
+        comments: []
+      },
+      {
+        id: 'post-2',
+        authorId: 'user-2',
+        authorName: 'Ibrahim Musa',
+        title: 'Best Physics Topics to Focus On',
+        content: 'For those preparing for JAMB Physics, here are the most frequently tested topics based on my analysis of past questions...',
+        category: 'Subject Help',
+        upvotes: 32,
+        downvotes: 1,
+        commentCount: 8,
+        createdAt: new Date('2024-01-20'),
+        comments: []
+      }
+    ];
   }
-];
+  return _mockPosts;
+};
+// Export as getter - will be called when needed
+export const MOCK_POSTS = typeof window !== 'undefined' ? getMockPosts() : [];
 
-// Mock Chat Rooms
-export const MOCK_CHAT_ROOMS: ChatRoom[] = [
-  {
-    id: 'room-1',
-    name: 'JAMB Mathematics',
-    subject: 'Mathematics',
-    members: ['user-1', 'user-2', 'user-3'],
-    messages: [],
-    createdAt: new Date('2024-01-10')
-  },
-  {
-    id: 'room-2',
-    name: 'Physics Study Group',
-    subject: 'Physics',
-    members: ['user-1', 'user-4'],
-    messages: [],
-    createdAt: new Date('2024-01-12')
+// Mock Chat Rooms - lazy initialization to avoid SSR issues
+let _mockChatRooms: ChatRoom[] | null = null;
+export const getMockChatRooms = (): ChatRoom[] => {
+  if (!_mockChatRooms) {
+    _mockChatRooms = [
+      {
+        id: 'room-1',
+        name: 'JAMB Mathematics',
+        subject: 'Mathematics',
+        members: ['user-1', 'user-2', 'user-3'],
+        messages: [],
+        createdAt: new Date('2024-01-10')
+      },
+      {
+        id: 'room-2',
+        name: 'Physics Study Group',
+        subject: 'Physics',
+        members: ['user-1', 'user-4'],
+        messages: [],
+        createdAt: new Date('2024-01-12')
+      }
+    ];
   }
-];
+  return _mockChatRooms;
+};
+// Export as getter - will be called when needed
+export const MOCK_CHAT_ROOMS = typeof window !== 'undefined' ? getMockChatRooms() : [];

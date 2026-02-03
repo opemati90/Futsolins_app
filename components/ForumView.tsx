@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MessageSquare, ArrowUp, ArrowDown, Plus, Search, TrendingUp, Clock, Star, X } from 'lucide-react';
 import { Post, Comment } from '../types';
-import { FORUM_CATEGORIES, MOCK_POSTS } from '../constants';
+import { FORUM_CATEGORIES, getMockPosts } from '../constants';
 
 interface ForumViewProps {
   isDarkMode?: boolean;
@@ -11,9 +11,25 @@ type SortOption = 'hot' | 'new' | 'top';
 
 export const ForumView: React.FC<ForumViewProps> = ({ isDarkMode }) => {
   const [posts, setPosts] = useState<Post[]>(() => {
-    if (typeof window === 'undefined') return MOCK_POSTS;
-    const stored = localStorage.getItem('eduprep_forum_posts');
-    return stored ? JSON.parse(stored) : MOCK_POSTS;
+    if (typeof window === 'undefined') return getMockPosts();
+    try {
+      const stored = localStorage.getItem('eduprep_forum_posts');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        // Convert date strings back to Date objects
+        return parsed.map((post: any) => ({
+          ...post,
+          createdAt: new Date(post.createdAt),
+          comments: post.comments?.map((c: any) => ({
+            ...c,
+            createdAt: new Date(c.createdAt)
+          })) || []
+        }));
+      }
+    } catch (e) {
+      console.error('Error loading forum posts:', e);
+    }
+    return getMockPosts();
   });
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [sortBy, setSortBy] = useState<SortOption>('hot');
