@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, BookOpen, Crown, LayoutDashboard, Sparkles, PenTool, Gift, Settings, ChevronDown, UserCircle, Phone, Tag, Star, LogIn, UserPlus, LogOut, Sun, Moon } from 'lucide-react';
+import { Menu, X, BookOpen, Crown, LayoutDashboard, Sparkles, PenTool, Gift, Settings, ChevronDown, UserCircle, Phone, Tag, Star, LogIn, UserPlus, LogOut, Sun, Moon, Trophy, Users, Globe, MessageSquare } from 'lucide-react';
 import { ViewState } from '../types';
 
 interface LayoutProps {
@@ -44,6 +44,10 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setView, isAuthenticated, 
       case ViewState.REFERRAL: return '/referral';
       case ViewState.PROFILE: return '/profile';
       case ViewState.SETTINGS: return '/settings';
+      case ViewState.COMPETITION: return '/competition';
+      case ViewState.STUDY_GROUP: return '/study-group';
+      case ViewState.ADMISSION_HUB: return '/admission-hub';
+      case ViewState.COMMUNITY: return '/community';
       default: return '/';
     }
   };
@@ -52,7 +56,10 @@ const Layout: React.FC<LayoutProps> = ({ currentView, setView, isAuthenticated, 
   const appNavItems = [
     { label: 'Dashboard', view: ViewState.DASHBOARD, path: '/dashboard', icon: LayoutDashboard },
     { label: 'Practice', view: ViewState.PRACTICE, path: '/practice', icon: PenTool },
-    { label: 'AI Planner', view: ViewState.PLANNER, path: '/planner', icon: Sparkles },
+    { label: 'Competition', view: ViewState.COMPETITION, path: '/competition', icon: Trophy },
+    { label: 'Community', view: ViewState.COMMUNITY, path: '/community', icon: MessageSquare },
+    { label: 'Admission Hub', view: ViewState.ADMISSION_HUB, path: '/admission-hub', icon: Globe },
+    { label: 'Study Group', view: ViewState.STUDY_GROUP, path: '/study-group', icon: Users },
     { label: 'Upgrade', view: ViewState.PRICING, path: '/pricing', icon: Crown },
     { label: 'Rewards', view: ViewState.REFERRAL, path: '/referral', icon: Gift },
   ];

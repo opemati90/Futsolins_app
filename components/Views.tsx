@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
-import { Check, Star, ArrowRight, BookOpen, Clock, Award, Brain, Target, Users, Layout, Shield, Zap, Mail, Lock, ChevronDown, ChevronUp, Trophy, Smartphone, Copy, Share2, TrendingUp, Facebook, Twitter, Calendar, Calculator, Microscope, Globe, PenTool, Gift, Sparkles, MessageCircle, UserCircle, Settings, Bell, AlertTriangle, Save, Camera, X, Play, RotateCcw, FileText, CheckCircle, CreditCard, LogOut, GraduationCap, ChevronRight, Info, HelpCircle, Loader2, Filter, XCircle } from 'lucide-react';
-import { ViewState, PerformanceData, Question } from '../types';
+import { Check, Star, ArrowRight, BookOpen, Clock, Award, Brain, Target, Users, Layout, Shield, Zap, Mail, Lock, ChevronDown, ChevronUp, Trophy, Smartphone, Copy, Share2, TrendingUp, Facebook, Twitter, Calendar, Calculator, Microscope, Globe, PenTool, Gift, Sparkles, MessageCircle, UserCircle, Settings, Bell, AlertTriangle, Save, Camera, X, Play, RotateCcw, FileText, CheckCircle, CreditCard, LogOut, GraduationCap, ChevronRight, Info, HelpCircle, Loader2, Filter, XCircle, Bookmark, History } from 'lucide-react';
+import { ViewState, PerformanceData, Question, Bookmark as BookmarkType, AnsweredQuestion } from '../types';
 import { PRICING_PLANS, TESTIMONIALS, SAMPLE_QUESTIONS } from '../constants';
 import { generateStudyPlan } from '../services/geminiService';
 
@@ -448,7 +449,7 @@ export const HomeView: React.FC<ViewProps> = ({ changeView }) => {
 // --- PRACTICE VIEW ---
 export const PracticeView: React.FC<ViewProps & { isDarkMode?: boolean }> = ({ changeView, isDarkMode }) => {
   // Flattened State: 'SETUP' combines selection and config
-  type Step = 'SETUP' | 'QUIZ' | 'RESULT';
+  type Step = 'SETUP' | 'QUIZ' | 'RESULT' | 'BOOKMARKS' | 'HISTORY';
   
   const [step, setStep] = useState<Step>('SETUP');
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
@@ -466,6 +467,20 @@ export const PracticeView: React.FC<ViewProps & { isDarkMode?: boolean }> = ({ c
   const [examTimer, setExamTimer] = useState(30 * 60);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
+
+  // Bookmarks and History
+  const [bookmarks, setBookmarks] = useState<BookmarkType[]>(() => {
+    const stored = localStorage.getItem('eduprep_bookmarks');
+    return stored ? JSON.parse(stored) : [];
+  });
+
+  const [answeredQuestions, setAnsweredQuestions] = useState<AnsweredQuestion[]>(() => {
+    const stored = localStorage.getItem('eduprep_answered_questions');
+    return stored ? JSON.parse(stored) : [];
+  });
+
+  const [bookmarkFilter, setBookmarkFilter] = useState<string>('all');
+  const [historyFilter, setHistoryFilter] = useState<string>('all');
 
   const subjects = [
     { name: "Mathematics", count: 1200, icon: Calculator, color: "bg-blue-50 text-blue-600" },
@@ -565,7 +580,57 @@ export const PracticeView: React.FC<ViewProps & { isDarkMode?: boolean }> = ({ c
   const handleFinishQuiz = () => {
       setIsSubmitted(true);
       setShowConfirmSubmit(false);
+      
+      // Save answered questions to history
+      if (configType === 'Objectives') {
+        const newAnswered: AnsweredQuestion[] = currentQuestions.map((q: Question) => ({
+          questionId: q.id,
+          subject: selectedSubject || 'Unknown',
+          examType: configExam,
+          userAnswer: userAnswers[q.id] as number,
+          correctAnswer: q.correctAnswer,
+          isCorrect: userAnswers[q.id] === q.correctAnswer,
+          answeredAt: new Date()
+        }));
+        
+        const updated = [...answeredQuestions, ...newAnswered];
+        setAnsweredQuestions(updated);
+        localStorage.setItem('eduprep_answered_questions', JSON.stringify(updated));
+      }
+      
       setStep('RESULT');
+  };
+
+  const toggleBookmark = (questionId: number) => {
+    const existing = bookmarks.find(b => b.questionId === questionId);
+    if (existing) {
+      const updated = bookmarks.filter(b => b.questionId !== questionId);
+      setBookmarks(updated);
+      localStorage.setItem('eduprep_bookmarks', JSON.stringify(updated));
+    } else {
+      const question = currentQuestions.find((q: Question) => q.id === questionId) as Question;
+      if (question) {
+        const newBookmark: BookmarkType = {
+          questionId,
+          subject: selectedSubject || question.subject,
+          examType: configExam,
+          createdAt: new Date()
+        };
+        const updated = [...bookmarks, newBookmark];
+        setBookmarks(updated);
+        localStorage.setItem('eduprep_bookmarks', JSON.stringify(updated));
+      }
+    }
+  };
+
+  const isBookmarked = (questionId: number) => {
+    return bookmarks.some(b => b.questionId === questionId);
+  };
+
+  const removeBookmark = (questionId: number) => {
+    const updated = bookmarks.filter(b => b.questionId !== questionId);
+    setBookmarks(updated);
+    localStorage.setItem('eduprep_bookmarks', JSON.stringify(updated));
   };
 
   const calculateScore = () => {
@@ -637,23 +702,55 @@ export const PracticeView: React.FC<ViewProps & { isDarkMode?: boolean }> = ({ c
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             {step === 'SETUP' ? 'Practice Arena' : 
              step === 'QUIZ' ? `${selectedSubject} Quiz` :
+             step === 'BOOKMARKS' ? 'Bookmarked Questions' :
+             step === 'HISTORY' ? 'Answered Questions History' :
              'Session Results'}
           </h1>
           <p className="text-gray-600 dark:text-slate-400 mt-1">
             {step === 'SETUP' ? 'Select a subject to customize your session instantly.' : 
              step === 'QUIZ' ? `${configMode} Mode • ${configType} • ${configYear}` :
+             step === 'BOOKMARKS' ? 'Review your saved questions' :
+             step === 'HISTORY' ? 'Track your practice progress' :
              'Performance summary and analytics.'}
           </p>
         </div>
         
-        {step !== 'SETUP' && (
+        <div className="flex items-center gap-3">
+          {step === 'SETUP' && (
+            <>
+              <button
+                onClick={() => setStep('BOOKMARKS')}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-all"
+              >
+                <Bookmark className="h-4 w-4" />
+                Bookmarks ({bookmarks.length})
+              </button>
+              <button
+                onClick={() => setStep('HISTORY')}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-all"
+              >
+                <History className="h-4 w-4" />
+                History ({answeredQuestions.length})
+              </button>
+            </>
+          )}
+          {step !== 'SETUP' && step !== 'BOOKMARKS' && step !== 'HISTORY' && (
             <button 
             onClick={handleBack}
             className="text-sm font-medium text-gray-500 hover:text-gray-900 dark:text-slate-400 dark:hover:text-white transition-colors flex items-center gap-1"
             >
             <ChevronDown className="h-4 w-4 rotate-90" /> Back
             </button>
-        )}
+          )}
+          {(step === 'BOOKMARKS' || step === 'HISTORY') && (
+            <button 
+            onClick={() => setStep('SETUP')}
+            className="text-sm font-medium text-gray-500 hover:text-gray-900 dark:text-slate-400 dark:hover:text-white transition-colors flex items-center gap-1"
+            >
+            <ChevronDown className="h-4 w-4 rotate-90" /> Back to Practice
+            </button>
+          )}
+        </div>
       </div>
 
       {/* STEP 1: UNIFIED DASHBOARD (SETUP) */}
@@ -791,10 +888,23 @@ export const PracticeView: React.FC<ViewProps & { isDarkMode?: boolean }> = ({ c
                  {/* OBJECTIVES */}
                  {configType === 'Objectives' && (
                    <>
-                     {/* Question Text */}
-                     <p className="text-lg font-medium text-gray-900 dark:text-white mb-8 leading-relaxed">
-                       {(currentQuestions[currentQIndex] as Question).questionText}
-                     </p>
+                     {/* Question Text with Bookmark */}
+                     <div className="flex items-start justify-between gap-4 mb-8">
+                       <p className="text-lg font-medium text-gray-900 dark:text-white leading-relaxed flex-1">
+                         {(currentQuestions[currentQIndex] as Question).questionText}
+                       </p>
+                       <button
+                         onClick={() => toggleBookmark((currentQuestions[currentQIndex] as Question).id)}
+                         className={`p-2 rounded-lg transition-all flex-shrink-0 ${
+                           isBookmarked((currentQuestions[currentQIndex] as Question).id)
+                             ? 'text-yellow-500 bg-yellow-50 dark:bg-yellow-900/20'
+                             : 'text-gray-400 hover:text-yellow-500 hover:bg-gray-50 dark:hover:bg-slate-800'
+                         }`}
+                         title={isBookmarked((currentQuestions[currentQIndex] as Question).id) ? 'Remove bookmark' : 'Bookmark this question'}
+                       >
+                         <Bookmark className={`h-5 w-5 ${isBookmarked((currentQuestions[currentQIndex] as Question).id) ? 'fill-current' : ''}`} />
+                       </button>
+                     </div>
                      
                      {/* Options */}
                      <div className="space-y-3">
@@ -863,10 +973,23 @@ export const PracticeView: React.FC<ViewProps & { isDarkMode?: boolean }> = ({ c
                  {/* THEORY */}
                  {configType === 'Theory' && (
                    <>
-                     <p className="text-lg font-medium text-gray-900 dark:text-white mb-6 leading-relaxed">
-                       {/* @ts-ignore - TS thinks it might be objective question */}
-                       {currentQuestions[currentQIndex].text}
-                     </p>
+                     <div className="flex items-start justify-between gap-4 mb-6">
+                       <p className="text-lg font-medium text-gray-900 dark:text-white leading-relaxed flex-1">
+                         {/* @ts-ignore - TS thinks it might be objective question */}
+                         {currentQuestions[currentQIndex].text}
+                       </p>
+                       <button
+                         onClick={() => toggleBookmark(currentQuestions[currentQIndex].id)}
+                         className={`p-2 rounded-lg transition-all flex-shrink-0 ${
+                           isBookmarked(currentQuestions[currentQIndex].id)
+                             ? 'text-yellow-500 bg-yellow-50 dark:bg-yellow-900/20'
+                             : 'text-gray-400 hover:text-yellow-500 hover:bg-gray-50 dark:hover:bg-slate-800'
+                         }`}
+                         title={isBookmarked(currentQuestions[currentQIndex].id) ? 'Remove bookmark' : 'Bookmark this question'}
+                       >
+                         <Bookmark className={`h-5 w-5 ${isBookmarked(currentQuestions[currentQIndex].id) ? 'fill-current' : ''}`} />
+                       </button>
+                     </div>
                      <textarea
                         value={getTheoryAnswer(currentQuestions[currentQIndex].id)}
                         onChange={(e) => handleTheoryInput(e.target.value)}
@@ -976,6 +1099,180 @@ export const PracticeView: React.FC<ViewProps & { isDarkMode?: boolean }> = ({ c
                  </button>
               </div>
            </div>
+        </div>
+      )}
+
+      {/* BOOKMARKS VIEW */}
+      {step === 'BOOKMARKS' && (
+        <div className="animate-in fade-in">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 p-6 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Bookmarked Questions</h2>
+              <select
+                value={bookmarkFilter}
+                onChange={(e) => setBookmarkFilter(e.target.value)}
+                className="px-4 py-2 rounded-lg border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white text-sm"
+              >
+                <option value="all">All Subjects</option>
+                {Array.from(new Set(bookmarks.map(b => b.subject))).map(subject => (
+                  <option key={subject} value={subject}>{subject}</option>
+                ))}
+              </select>
+            </div>
+            {bookmarks.length === 0 ? (
+              <div className="text-center py-12">
+                <Bookmark className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600 dark:text-slate-400">No bookmarked questions yet</p>
+                <p className="text-sm text-gray-500 dark:text-slate-500 mt-2">Bookmark questions while practicing to review them later</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {bookmarks
+                  .filter(b => bookmarkFilter === 'all' || b.subject === bookmarkFilter)
+                  .map((bookmark) => {
+                    const question = SAMPLE_QUESTIONS.find(q => q.id === bookmark.questionId);
+                    if (!question) return null;
+                    return (
+                      <div key={bookmark.questionId} className="p-4 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/50">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-xs font-bold text-nigeria-600 dark:text-nigeria-400 bg-nigeria-50 dark:bg-nigeria-900/20 px-2 py-1 rounded">
+                                {bookmark.subject}
+                              </span>
+                              <span className="text-xs text-gray-500 dark:text-slate-400">
+                                {bookmark.examType}
+                              </span>
+                            </div>
+                            <p className="text-gray-900 dark:text-white font-medium mb-2">{question.questionText}</p>
+                            <div className="flex flex-wrap gap-2">
+                              {question.options.map((opt, idx) => (
+                                <span
+                                  key={idx}
+                                  className={`text-xs px-2 py-1 rounded ${
+                                    idx === question.correctAnswer
+                                      ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400'
+                                      : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-400'
+                                  }`}
+                                >
+                                  {String.fromCharCode(65 + idx)}. {opt}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => removeBookmark(bookmark.questionId)}
+                            className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                            title="Remove bookmark"
+                          >
+                            <X className="h-5 w-5" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* HISTORY VIEW */}
+      {step === 'HISTORY' && (
+        <div className="animate-in fade-in">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 p-6 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Answered Questions History</h2>
+              <select
+                value={historyFilter}
+                onChange={(e) => setHistoryFilter(e.target.value)}
+                className="px-4 py-2 rounded-lg border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white text-sm"
+              >
+                <option value="all">All</option>
+                <option value="correct">Correct Only</option>
+                <option value="incorrect">Incorrect Only</option>
+                {Array.from(new Set(answeredQuestions.map(a => a.subject))).map(subject => (
+                  <option key={subject} value={subject}>{subject}</option>
+                ))}
+              </select>
+            </div>
+            {answeredQuestions.length === 0 ? (
+              <div className="text-center py-12">
+                <History className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600 dark:text-slate-400">No answered questions yet</p>
+                <p className="text-sm text-gray-500 dark:text-slate-500 mt-2">Complete practice sessions to see your history here</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {answeredQuestions
+                  .filter(a => {
+                    if (historyFilter === 'all') return true;
+                    if (historyFilter === 'correct') return a.isCorrect;
+                    if (historyFilter === 'incorrect') return !a.isCorrect;
+                    return a.subject === historyFilter;
+                  })
+                  .map((answered, idx) => {
+                    const question = SAMPLE_QUESTIONS.find(q => q.id === answered.questionId);
+                    if (!question) return null;
+                    return (
+                      <div key={`${answered.questionId}-${idx}`} className="p-4 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/50">
+                        <div className="flex items-start justify-between gap-4 mb-3">
+                          <div className="flex items-center gap-2">
+                            <span className={`text-xs font-bold px-2 py-1 rounded ${
+                              answered.isCorrect
+                                ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400'
+                                : 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400'
+                            }`}>
+                              {answered.isCorrect ? 'Correct' : 'Incorrect'}
+                            </span>
+                            <span className="text-xs text-nigeria-600 dark:text-nigeria-400 bg-nigeria-50 dark:bg-nigeria-900/20 px-2 py-1 rounded">
+                              {answered.subject}
+                            </span>
+                            <span className="text-xs text-gray-500 dark:text-slate-400">
+                              {new Date(answered.answeredAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                        <p className="text-gray-900 dark:text-white font-medium mb-3">{question.questionText}</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <p className="text-xs font-bold text-gray-500 dark:text-slate-400 mb-1">Your Answer</p>
+                            <p className={`text-sm font-medium ${
+                              answered.isCorrect
+                                ? 'text-green-700 dark:text-green-400'
+                                : 'text-red-700 dark:text-red-400'
+                            }`}>
+                              {String.fromCharCode(65 + (answered.userAnswer as number))}. {question.options[answered.userAnswer as number]}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs font-bold text-gray-500 dark:text-slate-400 mb-1">Correct Answer</p>
+                            <p className="text-sm font-medium text-green-700 dark:text-green-400">
+                              {String.fromCharCode(65 + question.correctAnswer)}. {question.options[question.correctAnswer]}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+            {answeredQuestions.length > 0 && (
+              <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-bold text-blue-900 dark:text-blue-200">Performance Summary</p>
+                    <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                      {answeredQuestions.filter(a => a.isCorrect).length} correct out of {answeredQuestions.length} questions
+                    </p>
+                  </div>
+                  <div className="text-2xl font-bold text-blue-700 dark:text-blue-400">
+                    {Math.round((answeredQuestions.filter(a => a.isCorrect).length / answeredQuestions.length) * 100)}%
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
@@ -1235,6 +1532,7 @@ export const PlannerView: React.FC<ViewProps & { isDarkMode?: boolean }> = ({ ch
 
 // --- PRICING VIEW ---
 export const PricingView: React.FC<ViewProps & { isDarkMode?: boolean }> = ({ changeView, isDarkMode }) => {
+  const navigate = useNavigate();
   return (
     <div className="py-16 bg-white dark:bg-slate-950 animate-in fade-in">
        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1279,7 +1577,7 @@ export const PricingView: React.FC<ViewProps & { isDarkMode?: boolean }> = ({ ch
                    </ul>
 
                    <button 
-                     onClick={() => changeView(ViewState.SIGNUP)}
+                     onClick={() => plan.id === 'study-group' ? navigate('/study-group') : changeView(ViewState.SIGNUP)}
                      className={`w-full py-3.5 rounded-xl font-bold transition-all ${
                         plan.isRecommended 
                         ? 'bg-nigeria-600 text-white hover:bg-nigeria-700 shadow-lg' 

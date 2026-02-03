@@ -1,4 +1,4 @@
-import { PricingPlan, Testimonial, Question } from './types';
+import { PricingPlan, Testimonial, Question, Competition, Post, ChatRoom } from './types';
 
 export const TESTIMONIALS: Testimonial[] = [
   {
@@ -59,6 +59,18 @@ export const PRICING_PLANS: PricingPlan[] = [
       'All Achiever features included',
       'Dedicated mentor chat'
     ]
+  },
+  {
+    id: 'study-group',
+    name: 'Study Group Plan',
+    price: `₦${STUDY_GROUP_PRICE.toLocaleString()}`,
+    features: [
+      'Perfect for 3 friends',
+      'Shared premium access',
+      'Group study sessions',
+      'All Achiever features',
+      '30-day subscription'
+    ]
   }
 ];
 
@@ -85,3 +97,129 @@ export const SAMPLE_QUESTIONS: Question[] = [
     correctAnswer: 2
   }
 ];
+
+// JAMB Subjects (English is always compulsory)
+export const JAMB_SUBJECTS = [
+  "English Language", // Always compulsory
+  "Mathematics",
+  "Physics",
+  "Chemistry",
+  "Biology",
+  "Economics",
+  "Government",
+  "Literature in English",
+  "Geography",
+  "History",
+  "Commerce",
+  "Accounting",
+  "Agricultural Science",
+  "Computer Studies",
+  "French",
+  "Igbo",
+  "Yoruba",
+  "Hausa",
+  "Christian Religious Studies",
+  "Islamic Religious Studies"
+];
+
+// Mock Competitions
+export const MOCK_COMPETITIONS: Competition[] = [
+  {
+    id: 'comp-1',
+    title: 'JAMB Excellence Challenge 2024',
+    startDate: new Date('2024-02-01'),
+    endDate: new Date('2024-02-29'),
+    prizePool: 500000,
+    entryFee: 10000,
+    subjects: ['English Language', 'Mathematics', 'Physics', 'Chemistry'],
+    participants: 1247,
+    status: 'active'
+  },
+  {
+    id: 'comp-2',
+    title: 'Science & Tech Competition',
+    startDate: new Date('2024-03-01'),
+    endDate: new Date('2024-03-31'),
+    prizePool: 750000,
+    entryFee: 10000,
+    subjects: ['English Language', 'Mathematics', 'Physics', 'Computer Studies'],
+    participants: 0,
+    status: 'upcoming'
+  },
+  {
+    id: 'comp-3',
+    title: 'Arts & Humanities Challenge',
+    startDate: new Date('2024-01-01'),
+    endDate: new Date('2024-01-31'),
+    prizePool: 300000,
+    entryFee: 10000,
+    subjects: ['English Language', 'Literature', 'Government', 'History'],
+    participants: 856,
+    status: 'ended'
+  }
+];
+
+// Forum Categories
+export const FORUM_CATEGORIES = [
+  'JAMB',
+  'WAEC',
+  'NECO',
+  'Post-UTME',
+  'Study Tips',
+  'General Discussion',
+  'Subject Help',
+  'Success Stories'
+];
+
+// Mock Forum Posts
+export const MOCK_POSTS: Post[] = [
+  {
+    id: 'post-1',
+    authorId: 'user-1',
+    authorName: 'Chioma Okeke',
+    title: 'How I scored 320 in JAMB - My Study Strategy',
+    content: 'I want to share my study strategy that helped me score 320 in JAMB. The key was consistency and using past questions effectively...',
+    category: 'Success Stories',
+    upvotes: 45,
+    downvotes: 2,
+    commentCount: 12,
+    createdAt: new Date('2024-01-15'),
+    comments: []
+  },
+  {
+    id: 'post-2',
+    authorId: 'user-2',
+    authorName: 'Ibrahim Musa',
+    title: 'Best Physics Topics to Focus On',
+    content: 'For those preparing for JAMB Physics, here are the most frequently tested topics based on my analysis of past questions...',
+    category: 'Subject Help',
+    upvotes: 32,
+    downvotes: 1,
+    commentCount: 8,
+    createdAt: new Date('2024-01-20'),
+    comments: []
+  }
+];
+
+// Mock Chat Rooms
+export const MOCK_CHAT_ROOMS: ChatRoom[] = [
+  {
+    id: 'room-1',
+    name: 'JAMB Mathematics',
+    subject: 'Mathematics',
+    members: ['user-1', 'user-2', 'user-3'],
+    messages: [],
+    createdAt: new Date('2024-01-10')
+  },
+  {
+    id: 'room-2',
+    name: 'Physics Study Group',
+    subject: 'Physics',
+    members: ['user-1', 'user-4'],
+    messages: [],
+    createdAt: new Date('2024-01-12')
+  }
+];
+
+// Study Group Pricing
+export const STUDY_GROUP_PRICE = 15000; // ₦15,000 for 3 users

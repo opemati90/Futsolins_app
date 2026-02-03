@@ -3,6 +3,10 @@ import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-
 import Layout from './components/Layout';
 import { HomeView, DashboardView, PracticeView, PlannerView, PricingView, ReferralView, LoginView, SignupView, ProfileView, SettingsView } from './components/Views';
 import { CookiePolicy, PrivacyPolicy, TermsOfService } from './components/PolicyPages';
+import { CompetitionView } from './components/CompetitionView';
+import { StudyGroupView } from './components/StudyGroupView';
+import { AdmissionHubView } from './components/AdmissionHubView';
+import { CommunityView } from './components/CommunityView';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ViewState } from './types';
 
@@ -64,6 +68,14 @@ function App() {
         return ViewState.PROFILE;
       case '/settings':
         return ViewState.SETTINGS;
+      case '/competition':
+        return ViewState.COMPETITION;
+      case '/study-group':
+        return ViewState.STUDY_GROUP;
+      case '/admission-hub':
+        return ViewState.ADMISSION_HUB;
+      case '/community':
+        return ViewState.COMMUNITY;
       default:
         return ViewState.HOME;
     }
@@ -124,6 +136,38 @@ function App() {
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated} isDarkMode={isDarkMode} onLogin={handleLogin}>
               <SettingsView {...commonProps} />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/competition" 
+          element={
+            <ProtectedRoute isAuthenticated={isAuthenticated} isDarkMode={isDarkMode} onLogin={handleLogin}>
+              <CompetitionView isDarkMode={isDarkMode} />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/study-group" 
+          element={
+            <ProtectedRoute isAuthenticated={isAuthenticated} isDarkMode={isDarkMode} onLogin={handleLogin}>
+              <StudyGroupView isDarkMode={isDarkMode} />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/admission-hub" 
+          element={
+            <ProtectedRoute isAuthenticated={isAuthenticated} isDarkMode={isDarkMode} onLogin={handleLogin}>
+              <AdmissionHubView isDarkMode={isDarkMode} />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/community" 
+          element={
+            <ProtectedRoute isAuthenticated={isAuthenticated} isDarkMode={isDarkMode} onLogin={handleLogin}>
+              <CommunityView isDarkMode={isDarkMode} />
             </ProtectedRoute>
           } 
         />
