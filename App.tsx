@@ -17,24 +17,23 @@ function App() {
   
   // Initialize dark mode from system preference or default to false
   const [isDarkMode, setIsDarkMode] = useState(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        return window.matchMedia('(prefers-color-scheme: dark)').matches;
-      } catch (e) {
-        console.error('Error checking dark mode:', e);
-        return false;
-      }
+    try {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    } catch (e) {
+      console.error('Error checking dark mode:', e);
+      return false;
     }
-    return false;
   });
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && document?.documentElement) {
+    try {
       if (isDarkMode) {
         document.documentElement.classList.add('dark');
       } else {
         document.documentElement.classList.remove('dark');
       }
+    } catch (e) {
+      console.error('Error setting dark mode:', e);
     }
   }, [isDarkMode]);
 
