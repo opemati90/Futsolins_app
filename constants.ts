@@ -24,6 +24,9 @@ export const TESTIMONIALS: Testimonial[] = [
   }
 ];
 
+// Study Group Pricing (must be defined before PRICING_PLANS)
+export const STUDY_GROUP_PRICE = 15000; // ₦15,000 for 3 users
+
 export const PRICING_PLANS: PricingPlan[] = [
   {
     id: 'free',
@@ -63,7 +66,7 @@ export const PRICING_PLANS: PricingPlan[] = [
   {
     id: 'study-group',
     name: 'Study Group Plan',
-    price: `₦${STUDY_GROUP_PRICE.toLocaleString()}`,
+    price: '₦15,000',
     features: [
       'Perfect for 3 friends',
       'Shared premium access',
@@ -122,8 +125,9 @@ export const JAMB_SUBJECTS = [
   "Islamic Religious Studies"
 ];
 
-// Mock Competitions
-export const MOCK_COMPETITIONS: Competition[] = [
+// Mock Competitions - using function declaration to avoid Date initialization issues
+function createMockCompetitions(): Competition[] {
+  return [
   {
     id: 'comp-1',
     title: 'JAMB Excellence Challenge 2024',
@@ -157,7 +161,18 @@ export const MOCK_COMPETITIONS: Competition[] = [
     participants: 856,
     status: 'ended'
   }
-];
+  ];
+}
+
+// Export with error handling to prevent initialization errors from breaking the module
+export const MOCK_COMPETITIONS: Competition[] = (() => {
+  try {
+    return createMockCompetitions();
+  } catch (error) {
+    console.error('Error initializing MOCK_COMPETITIONS:', error);
+    return [];
+  }
+})();
 
 // Forum Categories
 export const FORUM_CATEGORIES = [
@@ -171,8 +186,9 @@ export const FORUM_CATEGORIES = [
   'Success Stories'
 ];
 
-// Mock Forum Posts
-export const MOCK_POSTS: Post[] = [
+// Mock Forum Posts - using function declaration to avoid Date initialization issues
+function createMockPosts(): Post[] {
+  return [
   {
     id: 'post-1',
     authorId: 'user-1',
@@ -200,9 +216,21 @@ export const MOCK_POSTS: Post[] = [
     comments: []
   }
 ];
+}
 
-// Mock Chat Rooms
-export const MOCK_CHAT_ROOMS: ChatRoom[] = [
+// Export with error handling to prevent initialization errors from breaking the module
+export const MOCK_POSTS: Post[] = (() => {
+  try {
+    return createMockPosts();
+  } catch (error) {
+    console.error('Error initializing MOCK_POSTS:', error);
+    return [];
+  }
+})();
+
+// Mock Chat Rooms - using function declaration to avoid Date initialization issues
+function createMockChatRooms(): ChatRoom[] {
+  return [
   {
     id: 'room-1',
     name: 'JAMB Mathematics',
@@ -220,6 +248,14 @@ export const MOCK_CHAT_ROOMS: ChatRoom[] = [
     createdAt: new Date('2024-01-12')
   }
 ];
+}
 
-// Study Group Pricing
-export const STUDY_GROUP_PRICE = 15000; // ₦15,000 for 3 users
+// Export with error handling to prevent initialization errors from breaking the module
+export const MOCK_CHAT_ROOMS: ChatRoom[] = (() => {
+  try {
+    return createMockChatRooms();
+  } catch (error) {
+    console.error('Error initializing MOCK_CHAT_ROOMS:', error);
+    return [];
+  }
+})();

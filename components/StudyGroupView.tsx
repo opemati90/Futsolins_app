@@ -12,8 +12,15 @@ type Step = 'overview' | 'create' | 'invite' | 'payment' | 'success' | 'manage';
 export const StudyGroupView: React.FC<StudyGroupViewProps> = ({ isDarkMode }) => {
   const [step, setStep] = useState<Step>('overview');
   const [userGroups, setUserGroups] = useState<StudyGroup[]>(() => {
-    const stored = localStorage.getItem('eduprep_study_groups');
-    return stored ? JSON.parse(stored) : [];
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const stored = localStorage.getItem('eduprep_study_groups');
+        return stored ? JSON.parse(stored) : [];
+      }
+    } catch (error) {
+      console.error('Error loading study groups:', error);
+    }
+    return [];
   });
   const [currentGroup, setCurrentGroup] = useState<StudyGroup | null>(null);
   const [groupName, setGroupName] = useState('');

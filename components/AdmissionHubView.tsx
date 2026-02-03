@@ -23,12 +23,26 @@ const UNIVERSITIES = {
 export const AdmissionHubView: React.FC<AdmissionHubViewProps> = ({ isDarkMode }) => {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [admissionApplications, setAdmissionApplications] = useState<AdmissionApplication[]>(() => {
-    const stored = localStorage.getItem('eduprep_admission_applications');
-    return stored ? JSON.parse(stored) : [];
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const stored = localStorage.getItem('eduprep_admission_applications');
+        return stored ? JSON.parse(stored) : [];
+      }
+    } catch (error) {
+      console.error('Error loading admission applications:', error);
+    }
+    return [];
   });
   const [visaApplications, setVisaApplications] = useState<VisaApplication[]>(() => {
-    const stored = localStorage.getItem('eduprep_visa_applications');
-    return stored ? JSON.parse(stored) : [];
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const stored = localStorage.getItem('eduprep_visa_applications');
+        return stored ? JSON.parse(stored) : [];
+      }
+    } catch (error) {
+      console.error('Error loading visa applications:', error);
+    }
+    return [];
   });
   const [showAdmissionForm, setShowAdmissionForm] = useState(false);
   const [showVisaForm, setShowVisaForm] = useState(false);

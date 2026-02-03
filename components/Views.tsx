@@ -470,13 +470,27 @@ export const PracticeView: React.FC<ViewProps & { isDarkMode?: boolean }> = ({ c
 
   // Bookmarks and History
   const [bookmarks, setBookmarks] = useState<BookmarkType[]>(() => {
-    const stored = localStorage.getItem('eduprep_bookmarks');
-    return stored ? JSON.parse(stored) : [];
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const stored = localStorage.getItem('eduprep_bookmarks');
+        return stored ? JSON.parse(stored) : [];
+      }
+    } catch (error) {
+      console.error('Error loading bookmarks:', error);
+    }
+    return [];
   });
 
   const [answeredQuestions, setAnsweredQuestions] = useState<AnsweredQuestion[]>(() => {
-    const stored = localStorage.getItem('eduprep_answered_questions');
-    return stored ? JSON.parse(stored) : [];
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const stored = localStorage.getItem('eduprep_answered_questions');
+        return stored ? JSON.parse(stored) : [];
+      }
+    } catch (error) {
+      console.error('Error loading answered questions:', error);
+    }
+    return [];
   });
 
   const [bookmarkFilter, setBookmarkFilter] = useState<string>('all');

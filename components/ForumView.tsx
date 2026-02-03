@@ -11,8 +11,25 @@ type SortOption = 'hot' | 'new' | 'top';
 
 export const ForumView: React.FC<ForumViewProps> = ({ isDarkMode }) => {
   const [posts, setPosts] = useState<Post[]>(() => {
-    const stored = localStorage.getItem('eduprep_forum_posts');
-    return stored ? JSON.parse(stored) : MOCK_POSTS;
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const stored = localStorage.getItem('eduprep_forum_posts');
+        return stored ? JSON.parse(stored) : (() => {
+          try {
+            return MOCK_POSTS;
+          } catch (e) {
+            return [];
+          }
+        })();
+      }
+    } catch (error) {
+      console.error('Error loading forum posts:', error);
+    }
+    try {
+      return MOCK_POSTS;
+    } catch (e) {
+      return [];
+    }
   });
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [sortBy, setSortBy] = useState<SortOption>('hot');

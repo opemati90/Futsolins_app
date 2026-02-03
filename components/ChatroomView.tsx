@@ -9,8 +9,25 @@ interface ChatroomViewProps {
 
 export const ChatroomView: React.FC<ChatroomViewProps> = ({ isDarkMode }) => {
   const [rooms, setRooms] = useState<ChatRoom[]>(() => {
-    const stored = localStorage.getItem('eduprep_chat_rooms');
-    return stored ? JSON.parse(stored) : MOCK_CHAT_ROOMS;
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const stored = localStorage.getItem('eduprep_chat_rooms');
+        return stored ? JSON.parse(stored) : (() => {
+          try {
+            return MOCK_CHAT_ROOMS;
+          } catch (e) {
+            return [];
+          }
+        })();
+      }
+    } catch (error) {
+      console.error('Error loading chat rooms:', error);
+    }
+    try {
+      return MOCK_CHAT_ROOMS;
+    } catch (e) {
+      return [];
+    }
   });
   const [selectedRoom, setSelectedRoom] = useState<ChatRoom | null>(rooms[0] || null);
   const [newMessage, setNewMessage] = useState('');

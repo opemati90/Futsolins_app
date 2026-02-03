@@ -8,7 +8,15 @@ interface CompetitionViewProps {
 }
 
 export const CompetitionView: React.FC<CompetitionViewProps> = ({ isDarkMode }) => {
-  const [competitions, setCompetitions] = useState<Competition[]>(MOCK_COMPETITIONS);
+  const [competitions, setCompetitions] = useState<Competition[]>(() => {
+    // Lazy load to avoid initialization issues
+    try {
+      return MOCK_COMPETITIONS;
+    } catch (error) {
+      console.error('Error loading competitions:', error);
+      return [];
+    }
+  });
   const [selectedCompetition, setSelectedCompetition] = useState<Competition | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentStep, setPaymentStep] = useState<'details' | 'confirm' | 'success'>('details');
@@ -20,8 +28,15 @@ export const CompetitionView: React.FC<CompetitionViewProps> = ({ isDarkMode }) 
     cardName: ''
   });
   const [userEntries, setUserEntries] = useState<CompetitionEntry[]>(() => {
-    const stored = localStorage.getItem('eduprep_competition_entries');
-    return stored ? JSON.parse(stored) : [];
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const stored = localStorage.getItem('eduprep_competition_entries');
+        return stored ? JSON.parse(stored) : [];
+      }
+    } catch (error) {
+      console.error('Error loading competition entries:', error);
+    }
+    return [];
   });
 
   const activeCompetitions = competitions.filter(c => c.status === 'active');
